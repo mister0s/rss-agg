@@ -1,14 +1,14 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 
+	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/mister0s/rss-agg/internal/database"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -26,16 +26,13 @@ func main() {
 		log.Fatal("DB_URL is empty!!!")
 	}
 
-	conn, err := sql.Open("postgres", dbUrl)
-
+	dbpool, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		log.Fatal("Failed to Open Connection!")
+		log.Fatalf("Unable to create connection pool: %v\n", err)
 	}
 
-	if conn.Ping() != nil {
-		log.Fatal("Failed to Ping DB!")
-	}
+	defer dbpool.Close()
 
-	apiServer := NewApiServer(port, database.New(conn))
+	apiServer := NewApiServer(port, database.New(dbpool))
 	apiServer.Run()
 }

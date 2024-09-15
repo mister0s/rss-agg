@@ -27,15 +27,17 @@ func (s *ApiServer) createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	now := time.Now().UTC()
 	newUser, err := s.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        uuid.New(),
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
+		CreatedAt: now,
+		UpdatedAt: now,
 		Name:      req.Name,
 	})
 
 	if err != nil {
 		respondWithErr(w, 400, fmt.Sprintf("Failed to create user: %v", err))
+		return
 	}
 
 	respondWithJson(w, 201, dbUserToUser(newUser))
